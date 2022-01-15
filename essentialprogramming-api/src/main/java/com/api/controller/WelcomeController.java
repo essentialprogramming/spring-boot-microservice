@@ -1,41 +1,34 @@
 package com.api.controller;
 
 import com.api.config.Anonymous;
-import com.util.async.ExecutorsProvider;
-import com.exception.ExceptionHandler;
-import com.util.async.Computation;
 import com.util.enums.Language;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 
 @Tag(description = "Test API", name = "Test purpose only")
-@RequestMapping("/")
+@RestController
 public class WelcomeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeController.class);
 
-    @Context
-    private Language language;
+    private final Language language;
 
-    @Context
-    ServletContext servletContext;
-
-    public WelcomeController() {
+    @Autowired
+    public WelcomeController(Language language) {
+        this.language = language;
         LOG.info("Starting..");
     }
 
@@ -43,10 +36,8 @@ public class WelcomeController {
     //........................................................................................................................
     //Test purpose only
     @SneakyThrows
-    @GetMapping(value = "test/{name}", consumes = {"application/json"}, produces = {"application/json"})
+    @GetMapping(value = "test/{name}",  produces = {"application/json"})
     @Operation(summary = "Test purpose only")
-    @Tag(description = "Test API", name = "Test purpose only")
-    @Anonymous
     public ResponseEntity<Language> test(@RequestHeader("Accept-Language") String lang, @PathVariable("name") String name) {
 
         return new ResponseEntity<>(test(), HttpStatus.OK);
@@ -57,8 +48,7 @@ public class WelcomeController {
     }
 
 
-
-    @GetMapping(value ="/questions" , consumes = {"application/json"}, produces = {"application/json"})
+    @GetMapping(value = "/questions")
     @ResponseBody
     @Anonymous
     public List<QuestionJSON> getQuestionsByQuiz() {
