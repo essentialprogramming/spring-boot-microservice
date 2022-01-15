@@ -1,6 +1,5 @@
 package com.api.config;
 
-import com.api.security.AllowUserIf;
 import com.api.security.TokenAuthentication;
 import com.api.security.SecurityChecker;
 import com.authentication.security.KeyStoreService;
@@ -66,16 +65,6 @@ public class SecurityFilter implements ContainerRequestFilter {
                 if (!isUserAllowed(response.getClaims(), rolesSet)) {
                     requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
 
-                }
-            }
-            if (method.isAnnotationPresent(AllowUserIf.class)) {
-                AllowUserIf permissionsAnnotation = method.getAnnotation(AllowUserIf.class);
-                String securityExpression = permissionsAnnotation.value();
-                Authentication authentication = createAuthentication(response.getClaims());
-
-                //Has user required authorities ?
-                if (!SecurityChecker.hasAuthorities(authentication, securityExpression)) {
-                    requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
                 }
             }
 

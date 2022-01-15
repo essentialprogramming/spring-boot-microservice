@@ -33,7 +33,7 @@ public class SwaggerConfig {
                 .builder()
                 .group("User API")
                 .packagesToScan(packagesToScan)
-                .pathsToMatch("/v1/**", "/pdf")
+                .pathsToMatch("/**")
                 //.addOpenApiCustomiser(basicAuthCustomizer())
                 .addOpenApiCustomiser(bearerAuthCustomizer())
                 .addOpenApiCustomiser(tagsSorterCustomizer())
