@@ -10,7 +10,7 @@ import com.authentication.template.TemplateEnum;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.crypto.PasswordHash;
 import com.email.service.EmailManager;
-import com.google.common.collect.ImmutableMap;
+import com.google.inject.internal.util.ImmutableMap;
 import com.util.password.PasswordException;
 import com.internationalization.EmailMessages;
 import com.internationalization.Messages;

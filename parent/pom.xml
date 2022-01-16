@@ -19,7 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java-version>1.8</java-version>
         <el-api.version>3.0.0</el-api.version>
-        <io.swagger.version>2.0.6</io.swagger.version>
+        <io.swagger.version>1.6.4</io.swagger.version>
         <com.fasterxml.jackson.version>2.12.5</com.fasterxml.jackson.version>
 <!--        <kotlin.version>1.3.10</kotlin.version>-->
         <org.springframework.version>5.2.19.RELEASE</org.springframework.version>
@@ -116,10 +116,18 @@
 
         <!-- Swagger -->
         <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-jaxrs2</artifactId>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
             <version>${io.swagger.version}</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.0.1-jre</version>
+        </dependency>
+
 
     </dependencies>
 

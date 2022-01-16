@@ -1,7 +1,6 @@
 package com.api.config;
 
 import com.api.security.TokenAuthentication;
-import com.api.security.SecurityChecker;
 import com.authentication.security.KeyStoreService;
 import com.token.validation.auth.AuthUtils;
 import com.token.validation.jwt.JwtClaims;
@@ -9,77 +8,113 @@ import com.token.validation.jwt.JwtUtil;
 import com.token.validation.jwt.exception.TokenValidationException;
 import com.token.validation.response.ValidationResponse;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import java.lang.reflect.Method;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
-public class SecurityFilter implements ContainerRequestFilter {
 
-    private final KeyStoreService keyStoreService;
-    private final ResourceInfo resourceInfo;
+/**
+ * Authenticates requests that contain an OAuth 2.0 Bearer Token
+ * <p>
+ * This filter should be used together with an {@link AuthenticationManager}
+ * that can authenticate a BearerAuthenticationToken.
+ */
+public class SecurityFilter extends AbstractAuthenticationProcessingFilter {
 
-    public SecurityFilter(KeyStoreService keyStoreService, ResourceInfo resourceInfo) {
-        this.keyStoreService = keyStoreService;
-        this.resourceInfo = resourceInfo;
+    private final AuthenticationManager authenticateManager;
+
+    public SecurityFilter(AuthenticationManager authManager, String defaultFilterProcessesUrl) {
+        super(defaultFilterProcessesUrl);
+        this.authenticateManager = authManager;
     }
-
 
     @Override
-    public void filter(final ContainerRequestContext requestContext) {
-        final String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException, IOException {
+
+        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization == null) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"missing_authorization_header\"}").build());
-            return;
-        }
-        if (!authorization.startsWith("Bearer ")) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"invalid_authorization_scheme\"}").build());
-            return;
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "{\"error\":\"missing_authorization_header\"}");
+            return null;
         }
 
+        if (!authorization.startsWith("Bearer ")) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ("{\"error\":\"invalid_authorization_scheme\"}"));
+            return null;
+        }
+
+        final String token = AuthUtils.extractBearerToken(authorization);
         final PublicKey publicKey;
         try {
-            publicKey = keyStoreService.getPublicKey();
-            ValidationResponse<JwtClaims> response = JwtUtil.verifyJwt(AuthUtils.extractBearerToken(authorization), publicKey);
-            if (!response.isValid()) {
-                requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"invalid_credentials\"}").build());
-                return;
+            publicKey = KeyStoreService.getInstance().getPublicKey();
+            ValidationResponse<JwtClaims> validationResponse = JwtUtil.verifyJwt(token, publicKey);
+            if (!validationResponse.isValid()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "{\"error\":\"invalid_credentials\"}");
+                return null;
             }
 
-            Method method = resourceInfo.getResourceMethod();
-            //Verify user access
-            if (method.isAnnotationPresent(RolesAllowed.class)) {
-                RolesAllowed rolesAnnotation = method.getAnnotation(RolesAllowed.class);
-                Set<String> rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.value()));
-
-                //Is user allowed ?
-                if (!isUserAllowed(response.getClaims(), rolesSet)) {
-                    requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
-
-                }
-            }
-
+            return authenticateManager.authenticate(new TokenAuthentication(validationResponse.getClaims()));
         } catch (TokenValidationException exception) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("{\"error\":\"invalid_token_format\"}").build());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ("{\"error\":\"invalid_token_format\"}"));
         } catch (Exception exception) {
             exception.printStackTrace();
-            requestContext.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("{\"error\":\"Unable to process your request, due to: \n" + ExceptionUtils.getStackTrace(exception) + "\n\"}").build());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ("{\"error\":\"Unable to process your request, due to: \n" + ExceptionUtils.getStackTrace(exception) + "\n\"}"));
+
+        }
+        return null;
+
+    }
+
+    @Override
+    protected final void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                                  FilterChain chain, Authentication authResult) throws IOException, ServletException {
+        SecurityContextHolder.getContext().setAuthentication(authResult);
+        chain.doFilter(request, response);
+    }
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        final HttpServletRequest request = (HttpServletRequest) req;
+        final HttpServletResponse response = (HttpServletResponse) res;
+
+        if (!requiresAuthentication(request, response)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        Authentication authResult;
+        try {
+            authResult = attemptAuthentication(request, response);
+            if (authResult == null) {
+                // return immediately as authentication hasn't completed
+                return;
+            }
+            successfulAuthentication(request, response, chain, authResult);
+
+        } catch (AuthenticationException failed) {
+            chain.doFilter(request, response);
         }
     }
+
 
     public static boolean isUserAllowed(JwtClaims claims, final Set<String> rolesSet) {
         boolean isAllowed = false;
 
-        if (claims.getRoles() == null){
+        if (claims.getRoles() == null) {
             return false;
         }
         String[] roles = claims.getRoles().split(",");
@@ -88,9 +123,5 @@ public class SecurityFilter implements ContainerRequestFilter {
             isAllowed = true;
         }
         return isAllowed;
-    }
-
-    private static Authentication createAuthentication(JwtClaims claims) {
-        return new TokenAuthentication(claims);
     }
 }
