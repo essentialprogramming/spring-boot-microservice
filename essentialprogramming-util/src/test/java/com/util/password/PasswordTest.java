@@ -1,6 +1,6 @@
 package com.util.password;
 
-import org.apache.commons.lang3.StringUtils;
+import com.util.text.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -52,7 +52,7 @@ public class UserController {
     }
 
 
-    @GetMapping(value = "user/load",  produces = {"application/json"})
+    @GetMapping(value = "user/load", produces = {"application/json"})
     @Operation(summary = "Load user",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Return authenticated user if it was successfully found",
@@ -60,12 +60,14 @@ public class UserController {
                                     schema = @Schema(implementation = UserJSON.class)))
             })
     @RolesAllowed({"visitor", "administrator"})
-    @PreAuthorize("hasAnyRole(@privilegeService.getPrivilegeRoles(\"LOAD.USER\")) OR hasAnyAuthority('PERMISSION_read:user', 'PERMISSION_edit:user') AND @userService.checkEmailExists(authentication.getPrincipal())")
-    public ResponseEntity<UserJSON> load(@RequestHeader(name="Authorization") String authorization) {
+    @PreAuthorize("hasAnyRole(@privilegeService.getPrivilegeRoles(\"LOAD.USER\")) AND hasAnyAuthority('PERMISSION_read:user', 'PERMISSION_edit:user') AND @userService.checkEmailExists(authentication.getPrincipal())")
+    public ResponseEntity<UserJSON> load(@RequestHeader(name = "Authorization", required = false) String authorization) {
 
         final String bearer = AuthUtils.extractBearerToken(authorization);
         final String email = AuthUtils.getClaim(bearer, "email");
 
-        return new ResponseEntity<>(userService.loadUser(email,  language), HttpStatus.OK);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userService.loadUser(email, language));
     }
 }

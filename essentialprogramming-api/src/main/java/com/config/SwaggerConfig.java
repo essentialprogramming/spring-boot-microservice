@@ -1,7 +1,5 @@
 package com.config;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
+
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
@@ -9,7 +7,6 @@ import org.springdoc.core.GroupedOpenApi;
 import org.springdoc.core.customizers.OpenApiCustomiser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 
 import java.util.Collections;
@@ -31,10 +28,9 @@ public class SwaggerConfig {
         final String[] packagesToScan = {"com.api.controller"};
         return GroupedOpenApi
                 .builder()
-                .group("User API")
+                .group("Essential Programming API")
                 .packagesToScan(packagesToScan)
                 .pathsToMatch("/**")
-                //.addOpenApiCustomiser(basicAuthCustomizer())
                 .addOpenApiCustomiser(bearerAuthCustomizer())
                 .addOpenApiCustomiser(tagsSorterCustomizer())
                 .addOpenApiCustomiser(userApiCustomizer())
@@ -44,14 +40,9 @@ public class SwaggerConfig {
     private OpenApiCustomiser userApiCustomizer() {
         return openAPI -> openAPI
                 .info(new Info()
-                        .title("Springboot & OpenAPI")
-                        .description("This is a sample Spring Boot RESTful service using OpenAPI")
-                        .version("3.0.0")
-                        .contact(new Contact()
-                                .name("Avangarde Software")
-                                .url("https://avangarde-software.com/")
-                                .email("markos.kosa@avangarde-software.com")));
-
+                        .title("Essential Programming API")
+                        .description("Essential Programming endpoints using OpenAPI 3.0")
+                        .version("v1"));
 
     }
 
@@ -69,15 +60,7 @@ public class SwaggerConfig {
                 .security(Collections.singletonList(new SecurityRequirement().addList("Bearer")));
     }
 
-    /**
-     * Defines basic authorization security scheme.
-     */
-    private OpenApiCustomiser basicAuthCustomizer() {
-        return openAPI -> openAPI
-                .components(openAPI.getComponents()
-                        .addSecuritySchemes("Basic",
-                                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("basic")));
-    }
+
 
     /**
      * Adjusts API definition to follow the API validation rule requiring alphabetically sorted tags.
@@ -89,13 +72,4 @@ public class SwaggerConfig {
 
     }
 
-/**
- @Bean
- public OpenAPI customOpenAPI() {
- return new OpenAPI()
- .components(new Components())
- .info(new Info().title("Contact Application API").description(
- "This is a sample Spring Boot RESTful service using springdoc-openapi and OpenAPI 3."));
- }
- */
 }

@@ -11,7 +11,7 @@ import com.crypto.Crypt;
 import com.crypto.PasswordHash;
 import com.api.template.Templates;
 import com.email.service.EmailManager;
-import com.google.common.collect.ImmutableMap;
+import com.google.inject.internal.util.ImmutableMap;
 import com.internationalization.EmailMessages;
 import com.internationalization.Messages;
 import com.util.enums.HTTPCustomStatus;

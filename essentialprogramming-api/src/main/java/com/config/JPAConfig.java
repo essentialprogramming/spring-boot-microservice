@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @EnableTransactionManagement
 @ComponentScan({"com.api.entities", "com.authentication.identityprovider.internal.entities"})
+@EnableSpringDataWebSupport
 @EnableJpaRepositories({"com.api.repository", "com.authentication.identityprovider.internal.repository"})
 public class JPAConfig {
 

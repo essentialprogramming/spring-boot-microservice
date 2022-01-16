@@ -3,7 +3,7 @@ package com.api.controller;
 import com.api.config.Anonymous;
 import com.api.entities.User;
 import com.api.template.Templates;
-import com.google.common.collect.ImmutableMap;
+import com.google.inject.internal.util.ImmutableMap;
 import com.template.service.TemplateService;
 import com.util.enums.Language;
 import io.swagger.v3.oas.annotations.Operation;
