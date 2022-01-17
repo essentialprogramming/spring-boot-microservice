@@ -14,11 +14,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -30,13 +32,14 @@ import java.util.Map;
 @Tag(description = "Pdf API", name = "Download PDF")
 @RequestMapping("/pdf")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@Controller
 public class PDFController {
 
     private final ApplicationContext applicationContext;
 
     private final TemplateService templateService;
 
-    @PostMapping(consumes =  {"application/json"}, produces = {"application/octet-stream"})
+    @PostMapping(produces = {"application/octet-stream"})
     @Operation(summary = "Generate PDF",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Demo PDF.",
@@ -44,16 +47,19 @@ public class PDFController {
                                     schema = @Schema(implementation = String.class)))
             })
     @Anonymous
-    public ResponseEntity<byte[]> generatePDF() {
+    public ResponseEntity<Resource> generatePDF() {
         final String fileName = String.format("pdf-example-%s.%s",
                 LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("MM-dd-yyyy-HH-mm")),
                 "pdf");
 
         byte[] payload = templateService.generatePDF(Templates.PDF_EXAMPLE, generateTemplateVariables(), applicationContext.getBean(Language.class).getLocale());
+        ByteArrayResource resource = new ByteArrayResource(payload);
 
         return ResponseEntity.ok()
                 .header("content-disposition", "attachment; filename=" + fileName + "; filename*=UTF-8''" + fileName)
-                .body(payload);
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .contentLength(payload.length)
+                .body(resource);
     }
 
     private Map<String, Object> generateTemplateVariables() {
