@@ -51,10 +51,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //.jwt();
         // @formatter:on
 
-        /*
+
         http.antMatcher("/v1/user/**")
                 .addFilterAfter(new SecurityFilter(getAuthenticationManager(), "/v1/user/**"), AnonymousAuthenticationFilter.class)
-                .rememberMe().alwaysRemember(true);*/
+                .rememberMe().alwaysRemember(true);
     }
 
     @Bean
