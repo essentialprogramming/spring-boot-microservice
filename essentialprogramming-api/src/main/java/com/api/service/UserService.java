@@ -45,14 +45,14 @@ public class UserService {
     }
 
     @Transactional
-    public UserJSON createUser(UserInput input, com.util.enums.Language language) throws GeneralSecurityException {
+    public UserJSON createUser(UserInput input, Locale locale) throws GeneralSecurityException {
 
         boolean isValid = checkAvailabilityByEmail(input.getEmail());
         if (!isValid)
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "EMAIL.ALREADY.TAKEN");
 
         final User user = UserMapper.inputToUser(input);
-        final User result = saveUser(user, input, language);
+        final User result = saveUser(user, input);
 
         String validationKey = Crypt.encrypt(NanoIdUtils.randomNanoId(), AppResources.ENCRYPTION_KEY.value());
         String encryptedUserKey = Crypt.encrypt(result.getUserKey(), AppResources.ENCRYPTION_KEY.value());
@@ -64,7 +64,8 @@ public class UserService {
                 .put("confirmationLink", url)
                 .build();
 
-        emailManager.send(result.getEmail(), EmailMessages.get("new_user.subject", language.getLocale()), Templates.NEW_USER, templateVariables, language.getLocale());
+        //TODO fix this
+        //emailManager.send(result.getEmail(), EmailMessages.get("new_user.subject", locale), Templates.NEW_USER, templateVariables, locale);
 
         return UserMapper.userToJson(result);
 
@@ -85,10 +86,10 @@ public class UserService {
 
 
     @Transactional
-    public UserJSON loadUser(String email, com.util.enums.Language language) throws ApiException {
+    public UserJSON loadUser(String email, Locale locale) throws ApiException {
 
         final User user = userRepository.findByEmail(email).orElseThrow(
-                () -> new ApiException(Messages.get("USER.NOT.EXIST", language), HTTPCustomStatus.UNAUTHORIZED)
+                () -> new ApiException(Messages.get("USER.NOT.EXIST", locale), HTTPCustomStatus.UNAUTHORIZED)
         );
 
         logger.info("User with email={} loaded", email);
@@ -97,7 +98,7 @@ public class UserService {
     }
 
 
-    private User saveUser(User user, UserInput input, com.util.enums.Language language) {
+    private User saveUser(User user, UserInput input) {
 
         String uuid = NanoIdUtils.randomNanoId();
         user.setUserKey(uuid);

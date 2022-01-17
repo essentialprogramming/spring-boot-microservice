@@ -11,13 +11,14 @@ import com.util.exceptions.ApiException;
 
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
+import java.util.Locale;
 
 public interface AuthenticationProvider {
 
-    Account authenticate(AuthRequest authRequest, Language language) throws ApiException;
-    Serializable generateOtp(String email, Language language) throws ApiException;
+    Account authenticate(AuthRequest authRequest, Locale locale) throws ApiException;
+    Serializable generateOtp(String email, Locale locale) throws ApiException;
 
-    Serializable resetPassword(ResetPasswordInput resetPasswordInput, Language language) throws ApiException, GeneralSecurityException;
-    Serializable setPassword(PasswordInput passwordInput, Language language) throws GeneralSecurityException, ApiException, PasswordException;
+    Serializable resetPassword(ResetPasswordInput resetPasswordInput, Locale locale) throws ApiException, GeneralSecurityException;
+    Serializable setPassword(PasswordInput passwordInput, Locale locale) throws GeneralSecurityException, ApiException, PasswordException;
 
 }

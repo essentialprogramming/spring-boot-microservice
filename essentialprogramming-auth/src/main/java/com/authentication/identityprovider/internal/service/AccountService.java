@@ -49,14 +49,14 @@ public class AccountService implements AuthenticationProvider {
      * @return Account for the username after authentication.
      */
     @Override
-    public Account authenticate(AuthRequest authRequest, Language language) throws ApiException {
+    public Account authenticate(AuthRequest authRequest, Locale locale) throws ApiException {
         Optional<Account> account = getAccount(authRequest.getEmail());
 
         if (!account.isPresent()) {
-            throw new ApiException(Messages.get("USER.NOT.EXIST", Language.ENGLISH), HTTPCustomStatus.UNAUTHORIZED);
+            throw new ApiException(Messages.get("USER.NOT.EXIST", Locale.ENGLISH), HTTPCustomStatus.UNAUTHORIZED);
         }
         if (account.get().isDeleted()) {
-            throw new ApiException(Messages.get("USER.ACCOUNT.DELETED", language), HTTPCustomStatus.UNAUTHORIZED);
+            throw new ApiException(Messages.get("USER.ACCOUNT.DELETED", locale), HTTPCustomStatus.UNAUTHORIZED);
         }
 
         boolean isValidPassword = PasswordHash.matches(authRequest.getPassword(), account.get().getPassword());
@@ -64,32 +64,32 @@ public class AccountService implements AuthenticationProvider {
         if (isValidPassword) {
             return account.get();
         }
-        throw new ApiException(Messages.get("USER.PASSWORD.INVALID", language), HTTPCustomStatus.UNAUTHORIZED);
+        throw new ApiException(Messages.get("USER.PASSWORD.INVALID", locale), HTTPCustomStatus.UNAUTHORIZED);
     }
 
     private Optional<Account> getAccount(String email) {
         return accountRepository.findByEmail(email);
     }
 
-    public Serializable setPassword(PasswordInput passwordInput, Language language) throws ApiException, PasswordException {
+    public Serializable setPassword(PasswordInput passwordInput, Locale locale) throws ApiException, PasswordException {
         Optional<Account> account = accountRepository.findByUserKey(passwordInput.getKey());
 
         if (!account.isPresent()) {
-            throw new ApiException(Messages.get("USER.NOT.EXIST", Language.ENGLISH), HTTPCustomStatus.UNAUTHORIZED);
+            throw new ApiException(Messages.get("USER.NOT.EXIST", Locale.ENGLISH), HTTPCustomStatus.UNAUTHORIZED);
         }
         if (account.get().isDeleted()) {
-            throw new ApiException(Messages.get("USER.ACCOUNT.DELETED", language), HTTPCustomStatus.UNAUTHORIZED);
+            throw new ApiException(Messages.get("USER.ACCOUNT.DELETED", locale), HTTPCustomStatus.UNAUTHORIZED);
         }
 
         if (!passwordInput.getNewPassword().equals(passwordInput.getConfirmPassword())) {
-            throw new ApiException(Messages.get("USER.PASSWORD.DONT.MATCH", language), HTTPCustomStatus.INVALID_REQUEST);
+            throw new ApiException(Messages.get("USER.PASSWORD.DONT.MATCH", locale), HTTPCustomStatus.INVALID_REQUEST);
         }
 
         PasswordStrength passwordPower = PasswordUtil.getPasswordStrength(passwordInput.getNewPassword());
         boolean passwordStrength = PasswordUtil.isStrongPassword(passwordInput.getNewPassword());
 
         if (!passwordStrength)
-            throw new PasswordException(Messages.get("USER.PASSWORD.STRENGTH", language), PasswordStrength.get(passwordPower.getValue()));
+            throw new PasswordException(Messages.get("USER.PASSWORD.STRENGTH", locale), PasswordStrength.get(passwordPower.getValue()));
 
         account.ifPresent(user -> user.setPassword(PasswordHash.encode(passwordInput.getNewPassword())));
 
@@ -100,10 +100,10 @@ public class AccountService implements AuthenticationProvider {
     }
 
 
-    public Serializable generateOtp(String email, Language language) throws ApiException {
+    public Serializable generateOtp(String email, Locale locale) throws ApiException {
 
         final Account account = accountRepository.findByEmail(email).orElseThrow(() ->
-                new ApiException(Messages.get("USER.NOT.EXIST", language), HTTPCustomStatus.UNAUTHORIZED));
+                new ApiException(Messages.get("USER.NOT.EXIST", locale), HTTPCustomStatus.UNAUTHORIZED));
 
         final String otp = NanoIdUtils.randomNanoId(XORShiftRandom.instance(), NanoIdUtils.DEFAULT_ALPHABET, NanoIdUtils.DEFAULT_SIZE);
         String url = OTP_LOGIN_URL.value() + "?email=" + account.getEmail() + "&otp=" + otp;
@@ -112,7 +112,7 @@ public class AccountService implements AuthenticationProvider {
                 .put("fullName", account.getFullName())
                 .put("link", url)
                 .build();
-        emailManager.send(account.getEmail(), EmailMessages.get("otp_login.subject", language.getLocale()), TemplateEnum.OTP_LOGIN, templateVariables, language.getLocale());
+        emailManager.send(account.getEmail(), EmailMessages.get("otp_login.subject", locale), TemplateEnum.OTP_LOGIN, templateVariables, locale);
 
         return new JsonResponse()
                 .with("status", "ok")
@@ -120,7 +120,7 @@ public class AccountService implements AuthenticationProvider {
     }
 
     @Override
-    public Serializable resetPassword(ResetPasswordInput resetPasswordInput, Language language) throws ApiException {
+    public Serializable resetPassword(ResetPasswordInput resetPasswordInput, Locale locale) throws ApiException {
         return null;
     }
 }

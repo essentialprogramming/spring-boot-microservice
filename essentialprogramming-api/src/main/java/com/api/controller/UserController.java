@@ -1,10 +1,12 @@
 package com.api.controller;
 
+import com.api.config.Anonymous;
 import com.api.output.UserJSON;
 import com.api.service.UserService;
 import com.api.model.*;
 import com.token.validation.auth.AuthUtils;
 import com.util.enums.Language;
+import com.util.web.SmartLocaleResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,15 +20,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.annotation.security.RolesAllowed;
+import javax.servlet.http.HttpServletRequest;
 import java.security.GeneralSecurityException;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
-@Tag(description = "User API", name = "User Services")
 @RestController
 @RequestMapping("/v1/")
+@Tag(description = "User API", name = "User Services")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class UserController {
 
@@ -34,7 +37,7 @@ public class UserController {
 
     private final UserService userService;
 
-    private final Language language;
+    private final SmartLocaleResolver smartLocaleResolver;
 
 
     @PostMapping(value = "user/create", consumes = {"application/json"}, produces = {"application/json"})
@@ -44,10 +47,11 @@ public class UserController {
                             content = @Content(mediaType = "application/json",
                                     schema = @Schema(implementation = UserJSON.class)))
             })
-    public ResponseEntity<UserJSON> createUser(@RequestBody UserInput userInput) throws GeneralSecurityException {
+    @Anonymous
+    public ResponseEntity<UserJSON> createUser(@RequestBody UserInput userInput, HttpServletRequest request) throws GeneralSecurityException {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userService.createUser(userInput, language));
+                .body(userService.createUser(userInput, smartLocaleResolver.resolveLocale(request)));
 
     }
 
@@ -61,13 +65,14 @@ public class UserController {
             })
     @RolesAllowed({"visitor", "administrator"})
     @PreAuthorize("hasAnyRole(@privilegeService.getPrivilegeRoles(\"LOAD.USER\")) AND hasAnyAuthority('PERMISSION_read:user', 'PERMISSION_edit:user') AND @userService.checkEmailExists(authentication.getPrincipal())")
-    public ResponseEntity<UserJSON> load(@RequestHeader(name = "Authorization", required = false) String authorization) {
+    public ResponseEntity<UserJSON> load(@RequestHeader(name = "Authorization", required = false) String authorization,
+                                         HttpServletRequest request) {
 
         final String bearer = AuthUtils.extractBearerToken(authorization);
         final String email = AuthUtils.getClaim(bearer, "email");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(userService.loadUser(email, language));
+                .body(userService.loadUser(email, smartLocaleResolver.resolveLocale(request)));
     }
 }

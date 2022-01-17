@@ -24,8 +24,7 @@ public class WelcomeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeController.class);
 
-    private final Language language;
-
+/*
     @Autowired
     public WelcomeController(Language language) {
         this.language = language;
@@ -43,10 +42,10 @@ public class WelcomeController {
         return new ResponseEntity<>(test(), HttpStatus.OK);
     }
 
-    private Language test() throws IOException {
-        return language;
+    private Locale test() throws IOException {
+        return locale;
     }
-
+*/
 
     @GetMapping(value = "/questions")
     @ResponseBody

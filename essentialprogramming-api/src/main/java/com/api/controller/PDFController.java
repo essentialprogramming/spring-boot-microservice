@@ -1,11 +1,12 @@
 package com.api.controller;
 
 import com.api.config.Anonymous;
+import com.api.entities.Language;
 import com.api.entities.User;
 import com.api.template.Templates;
 import com.google.inject.internal.util.ImmutableMap;
 import com.template.service.TemplateService;
-import com.util.enums.Language;
+import com.util.web.SmartLocaleResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,15 +14,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -32,10 +34,10 @@ import java.util.Map;
 @Tag(description = "Pdf API", name = "Download PDF")
 @RequestMapping("/pdf")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-@Controller
+@RestController
 public class PDFController {
 
-    private final ApplicationContext applicationContext;
+    private final SmartLocaleResolver smartLocaleResolver;
 
     private final TemplateService templateService;
 
@@ -47,12 +49,12 @@ public class PDFController {
                                     schema = @Schema(implementation = String.class)))
             })
     @Anonymous
-    public ResponseEntity<Resource> generatePDF() {
+    public ResponseEntity<Resource> generatePDF(HttpServletRequest request) {
         final String fileName = String.format("pdf-example-%s.%s",
                 LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("MM-dd-yyyy-HH-mm")),
                 "pdf");
 
-        byte[] payload = templateService.generatePDF(Templates.PDF_EXAMPLE, generateTemplateVariables(), applicationContext.getBean(Language.class).getLocale());
+        byte[] payload = templateService.generatePDF(Templates.PDF_EXAMPLE, generateTemplateVariables(), smartLocaleResolver.resolveLocale(request));
         ByteArrayResource resource = new ByteArrayResource(payload);
 
         return ResponseEntity.ok()

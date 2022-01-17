@@ -25,7 +25,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/apidoc/**",
-            "/v1/user/create/**",
+            "/v1/user/create/**", //TODO Clean this array
+            "/token/**",
             "/questions",
             "/test/**"
     };
@@ -50,9 +51,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //.jwt();
         // @formatter:on
 
+        /*
         http.antMatcher("/v1/user/**")
                 .addFilterAfter(new SecurityFilter(getAuthenticationManager(), "/v1/user/**"), AnonymousAuthenticationFilter.class)
-                .rememberMe().alwaysRemember(true);
+                .rememberMe().alwaysRemember(true);*/
     }
 
     @Bean

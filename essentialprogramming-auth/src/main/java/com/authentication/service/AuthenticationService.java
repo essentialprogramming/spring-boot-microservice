@@ -51,14 +51,14 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AccessToken authenticate(TokenRequest authRequest, AccessChannel accessChannel, Language language) throws ApiException {
+    public AccessToken authenticate(TokenRequest authRequest, AccessChannel accessChannel, Locale locale) throws ApiException {
         AccessToken accessTokenResponse;
         switch (accessChannel) {
             case PASSWORD:
-                accessTokenResponse = loginWithPassword((AuthRequest) authRequest, language);
+                accessTokenResponse = loginWithPassword((AuthRequest) authRequest, locale);
                 break;
             case OTP:
-                accessTokenResponse = otpLogin((AuthRequest) authRequest, language);
+                accessTokenResponse = otpLogin((AuthRequest) authRequest, locale);
                 break;
             default:
                 throw new ServiceException(ErrorCode.UNDEFINED_ACCESS_CHANNEL);
@@ -67,15 +67,15 @@ public class AuthenticationService {
         return accessTokenResponse;
     }
 
-    private AccessToken loginWithPassword(AuthRequest authRequest, Language language) throws ApiException {
+    private AccessToken loginWithPassword(AuthRequest authRequest, Locale locale) throws ApiException {
         if (StringUtils.isEmpty(authRequest.getEmail())) {
-            throw new ApiException(Messages.get("USERNAME.MANDATORY", language), HTTPCustomStatus.INVALID_REQUEST);
+            throw new ApiException(Messages.get("USERNAME.MANDATORY", locale), HTTPCustomStatus.INVALID_REQUEST);
         }
         if (StringUtils.isEmpty(authRequest.getPassword())) {
-            throw new ApiException(Messages.get("PASSWORD.MANDATORY", language), HTTPCustomStatus.INVALID_REQUEST);
+            throw new ApiException(Messages.get("PASSWORD.MANDATORY", locale), HTTPCustomStatus.INVALID_REQUEST);
         }
 
-        Account account = accountService.authenticate(authRequest, language);
+        Account account = accountService.authenticate(authRequest, locale);
         Map<String, String> privateClaimMap =
                 privateClaims(account.getEmail(), account.isActive(), Collections.singletonList("visitor"));
 
@@ -124,19 +124,19 @@ public class AuthenticationService {
 
 
     @Transactional
-    public Serializable setPassword(PasswordInput passwordInput, Language language) throws GeneralSecurityException, ApiException, PasswordException {
-        return accountService.setPassword(passwordInput, language);
+    public Serializable setPassword(PasswordInput passwordInput, Locale locale) throws GeneralSecurityException, ApiException, PasswordException {
+        return accountService.setPassword(passwordInput, locale);
     }
 
     @Transactional
-    public Serializable resetPassword(ResetPasswordInput resetPasswordInput, Language language) throws ApiException, GeneralSecurityException {
-        return accountService.resetPassword(resetPasswordInput, language);
+    public Serializable resetPassword(ResetPasswordInput resetPasswordInput, Locale locale) throws ApiException, GeneralSecurityException {
+        return accountService.resetPassword(resetPasswordInput, locale);
     }
 
-    private AccessToken otpLogin(AuthRequest authRequest, Language language) throws ApiException {
+    private AccessToken otpLogin(AuthRequest authRequest, Locale locale) throws ApiException {
 
         Account account = accountRepository.findByEmail(authRequest.getEmail()).orElseThrow(() ->
-                new ApiException(Messages.get("USER.NOT.EXIST", language), HTTPCustomStatus.UNAUTHORIZED)
+                new ApiException(Messages.get("USER.NOT.EXIST", locale), HTTPCustomStatus.UNAUTHORIZED)
         );
 
 
@@ -150,8 +150,8 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public Serializable generateOtp(String email, Language language) throws ApiException {
-        return accountService.generateOtp(email, language);
+    public Serializable generateOtp(String email, Locale locale) throws ApiException {
+        return accountService.generateOtp(email, locale);
     }
 
 }
