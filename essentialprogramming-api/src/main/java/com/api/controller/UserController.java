@@ -83,7 +83,7 @@ public class UserController {
                                     schema = @Schema(implementation = UserJSON.class)))
             })
     @RolesAllowed({"visitor", "administrator"})
-    @PreAuthorize("hasAnyRole(@privilegeService.getPrivilegeRoles(\"LOAD.USER\")) AND hasAnyAuthority('PERMISSION_read:user', 'PERMISSION_edit:user') AND @userService.checkEmailExists(authentication.getPrincipal())")
+    @PreAuthorize("hasAnyRole(@privilegeService.getPrivilegeRoles(\"LOAD.USER\")) AND hasAnyAuthority('PERMISSION_read:user', 'PERMISSION_edit:user')")
     public ResponseEntity<Serializable> load(@RequestHeader(name = "Authorization", required = false) String authorization,
                                              HttpServletRequest request) {
 
