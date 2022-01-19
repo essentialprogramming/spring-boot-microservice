@@ -37,11 +37,36 @@ public class SwaggerConfig {
                 .build();
     }
 
+    /**
+     * Authentication API
+     */
+    @Bean
+    public GroupedOpenApi authApi() {
+        final String[] packagesToScan = {"com.authentication.controller"};
+        return GroupedOpenApi
+                .builder()
+                .group("Authentication API")
+                .packagesToScan(packagesToScan)
+                .pathsToMatch("/**")
+                .addOpenApiCustomiser(authApiCustomizer())
+                .addOpenApiCustomiser(tagsSorterCustomizer())
+                .build();
+    }
+
     private OpenApiCustomiser userApiCustomizer() {
         return openAPI -> openAPI
                 .info(new Info()
                         .title("Essential Programming API")
                         .description("Essential Programming endpoints using OpenAPI 3.0")
+                        .version("v1"));
+
+    }
+
+    private OpenApiCustomiser authApiCustomizer() {
+        return openAPI -> openAPI
+                .info(new Info()
+                        .title("Authentication API")
+                        .description("Authentication endpoints using OpenAPI 3.0")
                         .version("v1"));
 
     }
