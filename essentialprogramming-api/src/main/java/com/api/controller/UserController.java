@@ -1,17 +1,16 @@
 package com.api.controller;
 
 import com.api.config.Anonymous;
+import com.api.model.UserInput;
 import com.api.output.Response;
 import com.api.output.UserJSON;
 import com.api.service.UserService;
-import com.api.model.*;
 import com.exception.ExceptionHandler;
 import com.internationalization.Messages;
 import com.token.validation.auth.AuthUtils;
 import com.util.async.Computation;
 import com.util.async.ExecutorsProvider;
 import com.util.enums.HTTPCustomStatus;
-import com.util.enums.Language;
 import com.util.exceptions.ApiException;
 import com.util.web.SmartLocaleResolver;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,19 +22,18 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.Locale;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
-
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -68,7 +66,7 @@ public class UserController {
                 .join();
     }
 
-    private Serializable createUser(UserInput userInput, Locale language) throws GeneralSecurityException, ApiException {
+    private Serializable createUser(@Valid UserInput userInput, Locale language) throws GeneralSecurityException, ApiException {
         boolean isValid = userService.checkAvailabilityByEmail(userInput.getEmail());
         if (!isValid) {
             throw new ApiException(Messages.get("EMAIL.ALREADY.TAKEN", language), HTTPCustomStatus.INVALID_REQUEST);
