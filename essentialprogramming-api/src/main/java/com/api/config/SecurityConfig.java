@@ -57,11 +57,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // @formatter:off
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//            .and()
-//                .authorizeRequests()
-//                     .antMatchers(AUTH_WHITELIST).permitAll()
-//                     .antMatchers("/**").authenticated();
-                .and()
+            .and()
+                .authorizeRequests()
+                     .antMatchers(AUTH_WHITELIST).permitAll()
+                     .antMatchers("/**").authenticated()
+            .and()
                 .oauth2ResourceServer()
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthenticationConverter());
