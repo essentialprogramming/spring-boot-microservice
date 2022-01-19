@@ -64,8 +64,7 @@ public class UserService {
                 .put("confirmationLink", url)
                 .build();
 
-        //TODO fix this
-        //emailManager.send(result.getEmail(), EmailMessages.get("new_user.subject", locale), Templates.NEW_USER, templateVariables, locale);
+        emailManager.send(result.getEmail(), EmailMessages.get("new_user.subject", locale), Templates.NEW_USER, templateVariables, locale);
 
         return UserMapper.userToJson(result);
 

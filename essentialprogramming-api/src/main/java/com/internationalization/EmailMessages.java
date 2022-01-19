@@ -1,15 +1,17 @@
 package com.internationalization;
 
-import com.spring.ApplicationContextFactory;
+import com.util.ApplicationContextWrapper;
 import com.util.enums.Language;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 
 import java.util.Locale;
 
+
 public class EmailMessages {
 
-    private static final MessageSource messageSourceEmail = ApplicationContextFactory.getBean("messageSourceEmail", ReloadableResourceBundleMessageSource.class);
+    private static final MessageSource messageSourceEmail = ApplicationContextWrapper
+            .getApplicationContext().getBean("messageSourceEmail", ReloadableResourceBundleMessageSource.class);
 
     public static String get(String key, Language language) {
         final Language defaultLanguage = language != null ? language : Language.ENGLISH;

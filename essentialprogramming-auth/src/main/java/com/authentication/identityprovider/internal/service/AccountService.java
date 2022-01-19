@@ -112,6 +112,7 @@ public class AccountService implements AuthenticationProvider {
                 .put("fullName", account.getFullName())
                 .put("link", url)
                 .build();
+
         emailManager.send(account.getEmail(), EmailMessages.get("otp_login.subject", locale), TemplateEnum.OTP_LOGIN, templateVariables, locale);
 
         return new JsonResponse()
