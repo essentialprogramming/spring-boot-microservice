@@ -1,31 +1,39 @@
 package com.spring;
 
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
-public class ApplicationContextFactory {
+@Component
+public class ApplicationContextFactory implements ApplicationContextAware {
 
-    private static final String SPRING_CONFIG_LOCATION = "com";
+    private static ApplicationContext applicationContext;
 
-
-    private ApplicationContextFactory() {}
-
-    private static class ApplicationContextHolder {
-        static final WebApplicationContext CONTEXT = createSpringWebAppContext(SPRING_CONFIG_LOCATION);
+    private ApplicationContextFactory() {
     }
 
 
-    private static AnnotationConfigWebApplicationContext createSpringWebAppContext(String configLocation) {
-        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-        context.setConfigLocation(configLocation);
-        return context;
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        applicationContext = context;
     }
 
-    public static WebApplicationContext getSpringApplicationContext(){
-        return ApplicationContextHolder.CONTEXT;
+
+    public static <T> T getBean(Class<T> clazz) {
+        assertContextInjected();
+        return applicationContext.getBean(clazz);
     }
 
     public static <T> T getBean(String s, Class<T> type) {
-        return ApplicationContextHolder.CONTEXT.getBean(s, type);
+        assertContextInjected();
+        return applicationContext.getBean(s, type);
+    }
+
+    public static void assertContextInjected() {
+        if (applicationContext == null) {
+            throw new RuntimeException("ApplicationContext is not injected");
+
+        }
     }
 }

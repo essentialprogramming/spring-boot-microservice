@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
@@ -36,9 +37,10 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 
-@RestController
-@RequestMapping("/v1/")
 @Tag(description = "User API", name = "User Services")
+@RequestMapping("/v1/")
+@RestController
+@Validated
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class UserController {
 
@@ -57,7 +59,7 @@ public class UserController {
                                     schema = @Schema(implementation = UserJSON.class)))
             })
     @Anonymous
-    public ResponseEntity<Serializable> createUser(@RequestBody UserInput userInput, HttpServletRequest request) throws GeneralSecurityException {
+    public ResponseEntity<Serializable> createUser(@RequestBody @Valid UserInput userInput, HttpServletRequest request) throws GeneralSecurityException {
 
         ExecutorService executorService = ExecutorsProvider.getExecutorService();
         return Computation.computeAsync(() -> createUser(userInput, smartLocaleResolver.resolveLocale(request)), executorService)
@@ -66,7 +68,7 @@ public class UserController {
                 .join();
     }
 
-    private Serializable createUser(@Valid UserInput userInput, Locale language) throws GeneralSecurityException, ApiException {
+    private Serializable createUser(UserInput userInput, Locale language) throws GeneralSecurityException, ApiException {
         boolean isValid = userService.checkAvailabilityByEmail(userInput.getEmail());
         if (!isValid) {
             throw new ApiException(Messages.get("EMAIL.ALREADY.TAKEN", language), HTTPCustomStatus.INVALID_REQUEST);
