@@ -4,6 +4,7 @@ import com.api.security.JWTAuthenticationManager;
 import com.authentication.security.PemUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -44,9 +45,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/apidoc/**",
             "/questions",
             "/test/**",
-            "/token",
-            "/v1/user/**"
+            "/token"
+
     };
+    public static final String USER_URL = "/v1/user/**";
 
 
     @Override
@@ -61,17 +63,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
                 .authorizeRequests()
-                     .antMatchers(AUTH_WHITELIST).permitAll()
-                     .antMatchers("/**").authenticated()
-            .and()
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(jwtAuthenticationConverter());
+                     .antMatchers(AUTH_WHITELIST).permitAll() // permit all access to these endpoints.
+                     .antMatchers(HttpMethod.POST, USER_URL).permitAll() // permit all access to these endpoints.
+                     .antMatchers("/**").authenticated() //any other requests needs to be authenticated
+            .and();
+                //.oauth2ResourceServer()
+                //.jwt()
+                //.jwtAuthenticationConverter(jwtAuthenticationConverter());
         // @formatter:on
 
-//        http.antMatcher("/v1/user/**")
-//                .addFilterAfter(new SecurityFilter(getAuthenticationManager(), "/v1/user/**"), AnonymousAuthenticationFilter.class)
-//                .rememberMe().alwaysRemember(true);
+        http.antMatcher("/v1/user/**")
+                .addFilterAfter(new SecurityFilter(getAuthenticationManager(), "/v1/user/**"), AnonymousAuthenticationFilter.class)
+                .rememberMe().alwaysRemember(true);
 
     }
 
