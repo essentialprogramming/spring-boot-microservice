@@ -1,49 +1,53 @@
 package com.api.config;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import javax.annotation.Priority;
-import javax.ws.rs.container.*;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Priority(1)
-@PreMatching
-@Provider
-public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilter {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@Component
+public class CorsFilter extends OncePerRequestFilter {
 
-    /**
-     * Method for ContainerRequestFilter.
-     */
+
     @Override
-    public void filter(ContainerRequestContext request) {
-        // If it's a preflight request, we abort the request with
-        // a 200 status, and the CORS headers are added in the
-        // response filter method below.
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader(
+                "Access-Control-Allow-Headers",
+                "origin, content-type, accept, authorization,  X-Requested-With, Content-Length");
+        response.setHeader(
+                "Access-Control-Allow-Methods",
+                "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD");
+
+        // If it's a preflight request, we abort the request with a 200 status
         if (isPreflightRequest(request)) {
-            request.abortWith(Response.ok().build());
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            filterChain.doFilter(request, response);
         }
+
     }
+
 
     /**
      * A preflight request is an OPTIONS request
      * with an Origin header.
      */
-    private static boolean isPreflightRequest(ContainerRequestContext request) {
-        return request.getHeaderString("Origin") != null
+    private static boolean isPreflightRequest(HttpServletRequest request) {
+        return request.getHeader("Origin") != null
                 && request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 
-    @Override
-    public void filter(ContainerRequestContext requestContext,
-                       ContainerResponseContext responseContext) {
-        responseContext.getHeaders().add(
-                "Access-Control-Allow-Origin", "*");
-        responseContext.getHeaders().add(
-                "Access-Control-Allow-Credentials", "true");
-        responseContext.getHeaders().add(
-                "Access-Control-Allow-Headers",
-                "origin, content-type, accept, authorization,  X-Requested-With, Content-Length");
-        responseContext.getHeaders().add(
-                "Access-Control-Allow-Methods",
-                "GET, POST, PUT, DELETE, OPTIONS, HEAD");
-    }
 }
