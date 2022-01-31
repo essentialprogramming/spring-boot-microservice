@@ -51,7 +51,7 @@ public class UserController {
     private final SmartLocaleResolver smartLocaleResolver;
 
 
-    @PostMapping(value = "user/create", consumes = {"application/json"}, produces = {"application/json"})
+    @PostMapping(value = "user", consumes = {"application/json"}, produces = {"application/json"})
     @Operation(summary = "Create user",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Return user if successfully added",
@@ -77,7 +77,7 @@ public class UserController {
     }
 
 
-    @GetMapping(value = "user/load", produces = {"application/json"})
+    @GetMapping(value = "user", produces = {"application/json"})
     @Operation(summary = "Load user",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Return authenticated user if it was successfully found",

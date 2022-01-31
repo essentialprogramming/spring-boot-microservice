@@ -1,5 +1,6 @@
 package com.api.security.filter;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,7 +25,7 @@ public class HttpMethodTypeSecurityFilter extends OncePerRequestFilter {
      * @param filterChain FilterChain
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         if (request.getMethod().equals(RequestMethod.OPTIONS.name())) {
             response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         } else if (request.getMethod().equals(RequestMethod.HEAD.name())) {

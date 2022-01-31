@@ -1,33 +1,33 @@
 package com.api.controller;
 
 import com.api.config.Anonymous;
-import com.util.enums.Language;
+import com.util.web.JsonResponse;
+import com.util.web.SmartLocaleResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 
-@Tag(description = "Test API", name = "Test purpose only")
+@Tag(description = "Test API", name = "Welcome (Test purpose only) ")
 @RestController
 public class WelcomeController {
 
     private static final Logger LOG = LoggerFactory.getLogger(WelcomeController.class);
 
-/*
+
     @Autowired
-    public WelcomeController(Language language) {
-        this.language = language;
+    public WelcomeController() {
         LOG.info("Starting..");
     }
 
@@ -35,17 +35,16 @@ public class WelcomeController {
     //........................................................................................................................
     //Test purpose only
     @SneakyThrows
-    @GetMapping(value = "test/{name}",  produces = {"application/json"})
+    @GetMapping(value = "test/{name}", produces = {"application/json"})
     @Operation(summary = "Test purpose only")
-    public ResponseEntity<Language> test(@RequestHeader("Accept-Language") String lang, @PathVariable("name") String name) {
-
-        return new ResponseEntity<>(test(), HttpStatus.OK);
+    @Anonymous
+    public ResponseEntity<Serializable> test(@RequestHeader("Accept-Language") String lang, @PathVariable("name") String name) {
+        return ResponseEntity.ok(new JsonResponse()
+                .with("message", "Welcome " + name)
+                .with("language", Locale.lookup(Locale.LanguageRange.parse(lang), SmartLocaleResolver.acceptedLocales).getDisplayName())
+        );
     }
 
-    private Locale test() throws IOException {
-        return locale;
-    }
-*/
 
     @GetMapping(value = "/questions")
     @ResponseBody
