@@ -1,28 +1,26 @@
 package com.api.config;
 
-import com.api.security.TokenAuthentication;
-import com.authentication.security.KeyStoreService;
 import com.token.validation.auth.AuthUtils;
 import com.token.validation.jwt.JwtClaims;
-import com.token.validation.jwt.JwtUtil;
-import com.token.validation.jwt.exception.TokenValidationException;
-import com.token.validation.response.ValidationResponse;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -33,83 +31,47 @@ import java.util.Set;
  * This filter should be used together with an {@link AuthenticationManager}
  * that can authenticate a BearerAuthenticationToken.
  */
-public class SecurityFilter extends AbstractAuthenticationProcessingFilter {
+public class SecurityFilter extends OncePerRequestFilter {
+
+    private final AuthenticationEntryPoint authenticationEntryPoint = new BearerTokenAuthenticationEntryPoint();
+    private final AuthenticationFailureHandler authenticationFailureHandler = (request, response, exception) -> {
+        if (exception instanceof AuthenticationServiceException) {
+            throw exception;
+        } else {
+            this.authenticationEntryPoint.commence(request, response, exception);
+        }
+    };
 
     private final AuthenticationManager authenticateManager;
 
-    public SecurityFilter(AuthenticationManager authManager, String defaultFilterProcessesUrl) {
-        super(defaultFilterProcessesUrl);
+    public SecurityFilter(AuthenticationManager authManager) {
         this.authenticateManager = authManager;
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-            throws AuthenticationException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "{\"error\":\"missing_authorization_header\"}");
-            return null;
-        }
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            logger.debug("Did not process request since did not find bearer token");
+        } else {
+            final String token = AuthUtils.extractBearerToken(authorization);
+            final BearerTokenAuthenticationToken authenticationRequest = new BearerTokenAuthenticationToken(token);
+            try {
+                Authentication authenticationResult = authenticateManager.authenticate(authenticationRequest);
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authenticationResult);
+                SecurityContextHolder.setContext(context);
 
-        if (!authorization.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ("{\"error\":\"invalid_authorization_scheme\"}"));
-            return null;
-        }
-
-        final String token = AuthUtils.extractBearerToken(authorization);
-        final PublicKey publicKey;
-        try {
-            publicKey = KeyStoreService.getInstance().getPublicKey();
-            ValidationResponse<JwtClaims> validationResponse = JwtUtil.verifyJwt(token, publicKey);
-            if (!validationResponse.isValid()) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "{\"error\":\"invalid_credentials\"}");
-                return null;
+            } catch (AuthenticationException exception) {
+                SecurityContextHolder.clearContext();
+                logger.debug("Failed to process authentication request", exception);
+                this.authenticationFailureHandler.onAuthenticationFailure(request, response, exception);
             }
 
-            return authenticateManager.authenticate(new TokenAuthentication(validationResponse.getClaims()));
-        } catch (TokenValidationException exception) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ("{\"error\":\"invalid_token_format\"}"));
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ("{\"error\":\"Unable to process your request, due to: \n" + ExceptionUtils.getStackTrace(exception) + "\n\"}"));
-
         }
-        return null;
-
+        filterChain.doFilter(request, response);
     }
-
-    @Override
-    protected final void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                                  FilterChain chain, Authentication authResult) throws IOException, ServletException {
-        SecurityContextHolder.getContext().setAuthentication(authResult);
-        chain.doFilter(request, response);
-    }
-
-    @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-        final HttpServletRequest request = (HttpServletRequest) req;
-        final HttpServletResponse response = (HttpServletResponse) res;
-
-        if (!requiresAuthentication(request, response)) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        Authentication authResult;
-        try {
-            authResult = attemptAuthentication(request, response);
-            if (authResult == null) {
-                // return immediately as authentication hasn't completed
-                return;
-            }
-            successfulAuthentication(request, response, chain, authResult);
-
-        } catch (AuthenticationException failed) {
-            chain.doFilter(request, response);
-        }
-    }
-
 
     public static boolean isUserAllowed(JwtClaims claims, final Set<String> rolesSet) {
         boolean isAllowed = false;
