@@ -48,7 +48,7 @@ public class BeanValidationExceptionHandler {
                 .with("From", remoteAddress)
                 .with("To", url)
                 .with("Message", exception.getMessage())
-                .with("Code", HttpStatus.BAD_REQUEST)
+                .with("Status", HttpStatus.BAD_REQUEST.value() + " (" + HttpStatus.BAD_REQUEST.getReasonPhrase() + ")")
                 .done();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -71,7 +71,7 @@ public class BeanValidationExceptionHandler {
                 .with("From", remoteAddress)
                 .with("To", url)
                 .with("Message", constraintValidation.getMessage())
-                .with("Code", HttpStatus.BAD_REQUEST)
+                .with("Status", HttpStatus.BAD_REQUEST.value() + " (" + HttpStatus.BAD_REQUEST.getReasonPhrase() + ")")
                 .done();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -88,7 +88,7 @@ public class BeanValidationExceptionHandler {
         jsonResponse = new JsonResponse()
                 .with("From", remoteAddress)
                 .with("To", url)
-                .with("Code", HttpStatus.BAD_REQUEST)
+                .with("Status", HttpStatus.BAD_REQUEST.value() + " (" + HttpStatus.BAD_REQUEST.getReasonPhrase() + ")")
                 .done();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse);
     }
@@ -103,7 +103,7 @@ public class BeanValidationExceptionHandler {
         jsonResponse = new JsonResponse()
                 .with("From", remoteAddress)
                 .with("To", url)
-                .with("Code", HttpStatus.METHOD_NOT_ALLOWED)
+                .with("Status", HttpStatus.METHOD_NOT_ALLOWED)
                 .done();
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).allow(HttpMethod.POST).body(jsonResponse);
     }

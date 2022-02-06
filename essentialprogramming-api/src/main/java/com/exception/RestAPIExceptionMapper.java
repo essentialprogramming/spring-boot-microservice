@@ -39,7 +39,7 @@ public class RestAPIExceptionMapper {
 
         final JsonResponse jsonResponse = new JsonResponse()
                 .with("message", exception.getMessage())
-                .with("code", exception.getHttpCode())
+                .with("status", status.value() + " (" + status + ")")
                 .done();
 
         return ResponseEntity.status(status.value()).body(jsonResponse);
