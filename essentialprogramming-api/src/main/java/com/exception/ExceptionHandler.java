@@ -15,7 +15,7 @@ public class ExceptionHandler {
 
     @FunctionalInterface
     interface Strategy<T> {
-        ResponseEntity getResponse(T exception);
+        ResponseEntity<JsonResponse> getResponse(T exception);
     }
 
     private final static Strategy<ApiException> apiExceptionStrategy = (exception) -> {

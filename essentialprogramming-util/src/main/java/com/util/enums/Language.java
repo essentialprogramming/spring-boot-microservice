@@ -1,7 +1,7 @@
 package com.util.enums;
 
+import com.util.text.StringUtils;
 import lombok.Getter;
-import org.springframework.util.StringUtils;
 
 import java.util.Locale;
 import java.util.stream.Stream;
