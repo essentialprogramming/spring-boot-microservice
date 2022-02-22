@@ -114,4 +114,9 @@ public class UserService {
         return user;
     }
 
+    @Transactional
+    public List<User> loadAll() {
+        return userRepository.findAll();
+    }
+
 }

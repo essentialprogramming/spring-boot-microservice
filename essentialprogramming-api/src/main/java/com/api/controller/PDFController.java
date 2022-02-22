@@ -3,6 +3,7 @@ package com.api.controller;
 import com.api.config.Anonymous;
 import com.api.entities.Language;
 import com.api.entities.User;
+import com.api.service.UserService;
 import com.api.template.Templates;
 import com.google.inject.internal.util.ImmutableMap;
 import com.template.service.TemplateService;
@@ -40,6 +41,7 @@ public class PDFController {
     private final SmartLocaleResolver smartLocaleResolver;
 
     private final TemplateService templateService;
+    private final UserService userService;
 
     @PostMapping(produces = {"application/octet-stream"})
     @Operation(summary = "Generate PDF",
@@ -65,34 +67,11 @@ public class PDFController {
     }
 
     private Map<String, Object> generateTemplateVariables() {
-        final User firstUser = new User();
-        firstUser.setFirstName("Razvan");
-        firstUser.setLastName("Prichici");
-        firstUser.setEmail("razvanpaulp@gmail.com");
-        firstUser.setCreatedDate(LocalDateTime.now());
-        firstUser.setLanguage(generateLanguage());
 
-        final User secondUser = new User();
-        secondUser.setFirstName("Roger");
-        secondUser.setLastName("Federer");
-        secondUser.setEmail("roger@atp.com");
-        secondUser.setCreatedDate(LocalDateTime.now());
-
-        final List<User> users = new ArrayList<>();
-        users.add(firstUser);
-        users.add(secondUser);
+        final List<User> users = userService.loadAll();
 
         return ImmutableMap.<String, Object>builder()
                 .put("users", users)
                 .build();
-    }
-
-    private static com.api.entities.Language generateLanguage() {
-        com.api.entities.Language language = new com.api.entities.Language();
-        language.setId(1);
-        language.setName("english");
-        language.setDisplayOrder(2);
-        language.setSymbol("EN");
-        return language;
     }
 }
