@@ -54,14 +54,13 @@ public class PDFController {
                 LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("MM-dd-yyyy-HH-mm")),
                 "pdf");
 
-        byte[] payload = templateService.generatePDF(Templates.PDF_EXAMPLE, generateTemplateVariables(), smartLocaleResolver.resolveLocale(request));
-        ByteArrayResource resource = new ByteArrayResource(payload);
+        byte[] pdfByteArray = templateService.generatePDF(Templates.PDF_EXAMPLE, generateTemplateVariables(), smartLocaleResolver.resolveLocale(request));
 
         return ResponseEntity.ok()
                 .header("content-disposition", "attachment; filename=" + fileName + "; filename*=UTF-8''" + fileName)
                 .contentType(MediaType.parseMediaType("application/octet-stream"))
-                .contentLength(payload.length)
-                .body(resource);
+                .contentLength(pdfByteArray.length)
+                .body(new ByteArrayResource(pdfByteArray));
     }
 
     private Map<String, Object> generateTemplateVariables() {
